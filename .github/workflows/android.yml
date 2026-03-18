@@ -1,60 +1,65 @@
-name: React Native Android Build
+name: React Native Android CI/CD
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:   # allows manual trigger
 
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
     steps:
-      # 1️⃣ Checkout the code
-      - name: Checkout repository
+      # 1️⃣ Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2️⃣ Set up Node.js
-      - name: Setup Node
+      # 2️⃣ Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      # 3️⃣ Install Node dependencies
-      - name: Install npm dependencies
+      # 3️⃣ Install npm dependencies
+      - name: Install dependencies
         run: npm install
 
-      # 4️⃣ Set up Java
+      # 4️⃣ Setup Java
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: 17
 
+      # 5️⃣ Ensure Android SDK build tools are installed
+      - name: Install Android SDK build tools
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT
+          yes | sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      # 6️⃣ Build Debug APK
+      # 6️⃣ Make Gradle wrapper executable
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      # 7️⃣ Build Debug APK
       - name: Build Debug APK
         working-directory: android
         run: ./gradlew assembleDebug
 
-      # 7️⃣ Build Release APK (optional)
-      - name: Build Release APK
-        working-directory: android
-        run: ./gradlew assembleRelease
-
       # 8️⃣ Upload Debug APK
-      - name: Upload Debug APK Artifact
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: react-native-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # 9️⃣ Upload Release APK
-      - name: Upload Release APK Artifact
+      # 9️⃣ Build Release APK
+      - name: Build Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      # 🔟 Upload Release APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: react-native-release-apk
