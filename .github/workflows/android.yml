@@ -35,14 +35,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # 5️⃣ Set up Android SDK
-      - name: Setup Android SDK
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 33
-          arch: x86_64
-          force-avd-creation: true
-          emulator-options: '-no-window -no-audio'
 
       # 6️⃣ Build Debug APK
       - name: Build Debug APK
