@@ -1,0 +1,69 @@
+name: React Native Android Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
+    steps:
+      # 1️⃣ Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Set up Node.js
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3️⃣ Install Node dependencies
+      - name: Install npm dependencies
+        run: npm install
+
+      # 4️⃣ Set up Java
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # 5️⃣ Set up Android SDK
+      - name: Setup Android SDK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          force-avd-creation: true
+          emulator-options: '-no-window -no-audio'
+
+      # 6️⃣ Build Debug APK
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      # 7️⃣ Build Release APK (optional)
+      - name: Build Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      # 8️⃣ Upload Debug APK
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-native-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # 9️⃣ Upload Release APK
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-native-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
